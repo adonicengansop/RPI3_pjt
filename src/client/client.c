@@ -26,8 +26,11 @@ int main()
         fgets(msg, 255, stdin);// le client ecrit son message
         msg[strlen(msg) - 1] = '\0';
  
-        if ((send(socketID, msg, strlen(msg), 0)) == -1)
-           perror("send");
+        if (envoyerMessage(socketID, INFO, msg) == 0){
+            printf("\nMessage envoye");
+        } else {
+            printf("\nErreur");
+        }
         recv(socketID, msg, 255, 0);
         printf ("Phrase reçue : %s\n", msg);
  

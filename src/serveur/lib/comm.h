@@ -19,7 +19,7 @@ int initComm();
 *  
 *
 */
-void envoyerMessage(char commande, char * msg);
+int envoyerMessage(int socketID, char commande, char * msg);
 
 /**
 *
@@ -29,4 +29,4 @@ void envoyerDonnee(char * data);
 
 char * concat(char * dest, char * source);
 
-void envoyerResolution(int x, int y);
+int envoyerResolution(int socketID, int x, int y);

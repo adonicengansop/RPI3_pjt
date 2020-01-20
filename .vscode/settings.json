@@ -8,6 +8,7 @@
         "errno.h": "c",
         "types.h": "c",
         "util.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "in.h": "c"
     }
 }

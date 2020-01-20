@@ -21,15 +21,18 @@
 int initComm();
 
 /**
-* Définit la résolution de la capture
-*
-*/
-void definirResolution(int x, int y);
+ * Définit la résolution de la capture
+ * @param int x
+ * @param int y
+ * @return 0 si succes et 1 si echec
+ */
+
+int definirResolution(int socketID, int x, int y);
 
 /**
 * Envoyer un message au serveur
-*
+* @return 0 si succes et 1 si echec
 */
-void envoyerMessage(char commande, char * msg);
+int envoyerMessage(int socketID, char commande, char * msg);
 
 char * concat(char * dest, char * source);

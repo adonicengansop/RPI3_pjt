@@ -7,7 +7,7 @@
 // Taille max en chaine de caractères d'une adresse ip
 const int TAILLE_ADRESSE_IP = 13;
 
-void definirResolution(int x, int y){
+int definirResolution(int socketID, int x, int y){
     char * charx = malloc(sizeof(4));
     char * chary = malloc(sizeof(4));
     sprintf(charx, "%d", x);
@@ -16,7 +16,7 @@ void definirResolution(int x, int y){
     char * res = concat(charx, "/");
     res = concat(res, chary);
 
-    sendMessage(CMD_DEFINIR_RESOLUTION, res);
+    return envoyerMessage(socketID, CMD_DEFINIR_RESOLUTION, res);
 } 
 
 int initComm(){
@@ -50,9 +50,14 @@ int initComm(){
     return socketID;
 }
 
-void envoyerMessage(char commande, char * msg){
+int envoyerMessage(int socketID, char commande, char * msg){
     printf("Envoi du message : %s", msg);
 
+    if ((send(socketID, msg, strlen(msg), 0)) == -1){
+           perror("send");
+           return 0;
+    }
+    return 1;
 }
 
 char * concat(char * dest, char * source){
