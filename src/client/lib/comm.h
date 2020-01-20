@@ -1,15 +1,26 @@
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <string.h>
-// Reponses du serveur
-const int CAPTURE_SUCCESS = 0;
-const int CAPTURE_ERROR = 1;
-
-// Commandes du client
-const int CMD_PRENDRE_PHOTO = 2;
+#include <stdlib.h>
+#include <stdio.h>
+#include "util.h"
 
 /*
-*
+* Définit la résolution de la capture
 *
 */
-void sendMessage(char * msg);
+void setResolution(struct CMDS_CLIENT cmds, int x, int y);
 
-void initComm();
+/*
+* Envoyer un message au serveur
+*
+*/
+void sendMessage(char commande, char * msg);
+
+/**
+ * Initialise la connexion avec le serveur
+ * @return socketID
+ */
+
+int initComm();
