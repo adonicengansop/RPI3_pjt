@@ -1,19 +1,23 @@
 #include "comm.h"
 #include "util.h"
+#include "util.c"
+
+#define RESOLUTION 1
 
 // Taille max en chaine de caractères d'une adresse ip
 const int TAILLE_ADRESSE_IP = 13;
 
-void setResolution(struct CMDS_CLIENT cmds, int x, int y){
+void definirResolution(int x, int y){
     char * charx = malloc(sizeof(4));
     char * chary = malloc(sizeof(4));
     sprintf(charx, "%d", x);
     sprintf(chary, "%d", y);
 
-    char * res = concat(charx, chary);
+    char * res = concat(charx, "/");
+    res = concat(res, chary);
 
-    sendMessage(cmds.CMD_DEFINIR_RESOLUTION, res);
-}
+    sendMessage(CMD_DEFINIR_RESOLUTION, res);
+} 
 
 int initComm(){
     struct sockaddr_in informations;  //structure donnant les informations sur le serveur
@@ -46,7 +50,14 @@ int initComm(){
     return socketID;
 }
 
-void sendMessage(char commande, char * msg){
-    printf("Evoi du message : %s", msg);
+void envoyerMessage(char commande, char * msg){
+    printf("Envoi du message : %s", msg);
 
+}
+
+char * concat(char * dest, char * source){
+	char *message = (char *)malloc(256);
+    strcpy(message, dest);
+    strcat(message, source);
+    return message;
 }

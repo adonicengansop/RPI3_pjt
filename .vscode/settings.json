@@ -6,6 +6,8 @@
         "stdio.h": "c",
         "socket.h": "c",
         "errno.h": "c",
-        "types.h": "c"
+        "types.h": "c",
+        "util.h": "c",
+        "stdlib.h": "c"
     }
 }

@@ -4,19 +4,14 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "util.h"
 
-/*
-* Définit la résolution de la capture
-*
-*/
-void setResolution(struct CMDS_CLIENT cmds, int x, int y);
+#define SUCCESS '0'
+#define ERROR '1'
+#define TAILLE_IMAGE '5'
 
-/*
-* Envoyer un message au serveur
-*
-*/
-void sendMessage(char commande, char * msg);
+#define CMD_PRENDRE_PHOTO '2'
+#define CMD_DEFINIR_RESOLUTION '3'
+#define INFO '4'
 
 /**
  * Initialise la connexion avec le serveur
@@ -24,3 +19,17 @@ void sendMessage(char commande, char * msg);
  */
 
 int initComm();
+
+/**
+* Définit la résolution de la capture
+*
+*/
+void definirResolution(int x, int y);
+
+/**
+* Envoyer un message au serveur
+*
+*/
+void envoyerMessage(char commande, char * msg);
+
+char * concat(char * dest, char * source);
