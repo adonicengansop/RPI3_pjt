@@ -1,44 +1,272 @@
+// Déclaration des bibliothèques utilisées
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <stdio.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
+#include <arpa/inet.h>
 
-#include "./lib/comm.h"
+#include <jpeglib.h>
 
-int main()
+#define CLEAR(x) memset (&(x), 0, sizeof (x))
+
+static unsigned int width = 640;
+static unsigned int height = 480;
+static unsigned int fps = 30;
+static int continuous = 0;
+static unsigned char jpegQuality = 70;
+static int nb_pic = 0;
+
+
+// #include <SDL/SDL.h>
+// #include <SDL/SDL_image.h>
+// #include <SDL/SDL_ttf.h>
+// #include <SDL/SDL_getenv.h>
+
+
+
+static void jpegWrite(unsigned char* img, char* jpegFilename)
 {
-    int socketID = initComm();
-    //pid_t pid;
-    int id;
-    char msg[255];//variable qui contiendrat les messages
+	
+	char * oldjpegFilename = malloc(strlen(jpegFilename)*sizeof(char) );
+	strcpy(oldjpegFilename,jpegFilename);
+
+        struct jpeg_compress_struct cinfo;
+        struct jpeg_error_mgr jerr;
+
+        JSAMPROW row_pointer[1];
+	char * str = malloc(3*sizeof(char) );
+	sprintf(str,"%d",nb_pic);
+	//str = nb_pic + '0';
+	//strcpy(str, nb_pic + '0');
+
+//	printf(str);
+//	printf("\n");
+        strcat(oldjpegFilename,str);
+        strcat(oldjpegFilename,".jpg");
+//	printf(oldjpegFilename);
+//	printf("\n");
+	int removeFile = remove(oldjpegFilename);
+	if (removeFile != 0)
+	{
+		fprintf( stderr, "Error: cannot remove the file.\n" );
+	}
+//	printf("OK suppress\n");
+	nb_pic++;
+	char * newjpegFilename = malloc(strlen(jpegFilename)*sizeof(char) );
+	strcpy(newjpegFilename,jpegFilename);
+	char * str2 = malloc(3*sizeof(char) );
+
+	sprintf(str2,"%d",nb_pic);
+//	printf(str2);
+//	printf("\n");
+	strcat(newjpegFilename,str2);
+	strcat(newjpegFilename,".jpg");
+//	printf(newjpegFilename);
+//	printf("\n");
+        FILE *outfile = fopen( newjpegFilename, "wb" );
+
+        // create jpeg data
+        cinfo.err = jpeg_std_error( &jerr );
+        jpeg_create_compress(&cinfo);
+        jpeg_stdio_dest(&cinfo, outfile);
+
+        // set image parameters
+        cinfo.image_width = width;
+        cinfo.image_height = height;
+        cinfo.input_components = 3;
+        cinfo.in_color_space = JCS_YCbCr;
+
+        // set jpeg compression parameters to default
+        jpeg_set_defaults(&cinfo);
+        // and then adjust quality setting
+        jpeg_set_quality(&cinfo, jpegQuality, TRUE);
+
+        // start compress
+        jpeg_start_compress(&cinfo, TRUE);
+
+        // feed data
+        while (cinfo.next_scanline < cinfo.image_height) {
+                row_pointer[0] = &img[cinfo.next_scanline * cinfo.image_width *  cinfo.input_components];
+                jpeg_write_scanlines(&cinfo, row_pointer, 1);
+        }
+
+        printf("Picture_written at : %s",newjpegFilename);
+        // finish compression
+        jpeg_finish_compress(&cinfo);
+
+        // destroy jpeg data
+        jpeg_destroy_compress(&cinfo);
+
+        // close output file
+        fclose(outfile);
+
+}
+
+static void AvailableCommands()
+{
+        printf("---------- AvailableCommands -----------\n");
+        printf("Take picture : %d \n",1);
+        printf("Quit : %s \n","bye");
+        printf("Help : %s \n","h");
+
+        }
+
+///// Main du fichier 
+
+int main(int argc , char ** argv)
+{
  
-    
+    pid_t pid;
+    int id, portno, addServeur;
+   // char msg[255];//variable qui contiendrat les messages
+char * msg = malloc(255*sizeof(char) );
+    int width = 640, height = 480;
+
+    unsigned char *img = malloc(width*height*3*sizeof(char));
  
-    if (strcmp(msg, "aurevoir") != 0)
+    struct sockaddr_in informations;  //structure donnant les informations sur le serveur
+
+    // Test du nombre d'arguments 
+    if (argc < 3)
+    {
+        fprintf(stderr,"Spécifiez les arguments SVP %s nom_hôte No_Port\n", argv[0]);
+        exit(0);
+     }
+    portno = atoi(argv[2]); // converti une chaine de caractére a un entier
+    addServeur = atoi(argv[1]);
+
+    /*initialisation du protocole, TCP  l'adresse de connection 127.0.0.1 (en local) et du port du serveur (1400)*/
+    informations.sin_family = AF_INET;
+    informations.sin_port = htons(portno);
+    informations.sin_addr.s_addr = inet_addr(argv[1]);
+ 
+    int socketID = socket(AF_INET, SOCK_STREAM, 0); // creation du socket propre au client
+ 
+    if (socketID == -1)    //test de création du socket
+    {
+        perror("socket");
+        exit (-1);
+    }
+ 
+    if ((connect(socketID, (struct sockaddr *) &informations, sizeof(struct sockaddr_in))) == -1)   //connexion au serveur
+    {
+        perror("connect");
+        exit (-1);
+    }
+ 
+    if (strcmp(msg, "bye") != 0)
     {
         memset(msg, 0, 255);
         recv(socketID, msg, 255, 0);
         printf ("%s\n", msg);
     }
  
+///// Affichage du menu de communication de l'application 
+    
+    AvailableCommands();
+
     do
     {
         id+=1;
-        printf ("moi : ");
+        printf ("\n moi : ");
         fgets(msg, 255, stdin);// le client ecrit son message
         msg[strlen(msg) - 1] = '\0';
  
-        if (envoyerMessage(socketID, INFO, msg) == 0){
-            printf("\nMessage envoye");
-        } else {
-            printf("\nErreur");
+        if (strcmp(msg,"1") == 0)
+        {
+
+        if ((send(socketID, msg, strlen(msg), 0)) == -1)
+            perror("send");
+
+        recv(socketID, img, width*height*3*sizeof(char), 0);
+
+	free(msg);
+	msg = malloc(255*sizeof(char) );
+	
+	strcpy(msg,"Picture_received\n");
+	printf(msg);
+
+	send(socketID,msg,255*sizeof(char),0);
+        jpegWrite(img,"client");
+        free(img);
+        img = malloc(width*height*3*sizeof(char));
         }
-        recv(socketID, msg, 255, 0);
-        printf ("Phrase reçue : %s\n", msg);
- 
+
+        else if (strcmp(msg,"h") == 0)
+        {
+            AvailableCommands();
+        }
+
+        else if (strcmp(msg,"bye") == 0)
+        {
+            printf("Quit program\n");
+            if ((send(socketID, msg, strlen(msg), 0)) == -1)
+                perror("send");
+            break;
+        }
+
+        else {
+            printf("Error : command not recognized.\n");
+        }
+        free(msg);
+        msg = malloc(255*sizeof(char) );
     }
-    while (strcmp(msg, "aurevoir") != 0);    // tant que le client n'envoie pas "aurevoir" la conversation n'est pas fini
- 
-    // shutdown(socketID, SHUT_RDWR);// fermeture du socket
+    while (1);
+
+
+    shutdown(socketID, SHUT_RDWR);// fermeture du socket
  
     return 0;
  
 }
+
+
+// Fonction affichage image avec SDL 2
+// void afficherImage(){
+
+// SDL_Surface *ecran = NULL, *fond = NULL;
+// SDL_Rect positionFond;
+ 
+//    SDL_Event event;
+ 
+//    int continuer = 1;
+ 
+//    putenv("SDL_VIDEO_CENTERED=1");
+//    SDL_Init(SDL_INIT_VIDEO);
+ 
+//    ecran = SDL_SetVideoMode(800, 640, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
+//    SDL_WM_SetCaption("SDLapp", NULL);
+ 
+// fond = IMG_Load("index.jpeg");
+ 
+//    positionFond.x = 0;
+//    positionFond.y = 0;
+ 
+//     while (continuer)
+//    {
+ 
+//        SDL_PollEvent(&event);
+//        switch (event.type)
+//        {
+//        case SDL_QUIT:
+//            continuer = 0;
+//            break;
+//        }
+ 
+//        SDL_FillRect(ecran, NULL, SDL_MapRGB(ecran->format, 0, 0, 0));
+ 
+// SDL_BlitSurface(fond, NULL, ecran, &positionFond);
+ 
+//        SDL_Flip(ecran);
+//    }
+ 
+// SDL_FreeSurface(fond);
+ 
+//    SDL_Quit();
+ 
+//    return EXIT_SUCCESS;
+
+// }
