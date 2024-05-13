@@ -9,6 +9,7 @@
 int main(int argc , char ** argv)
 {
  
+ // Ceci est un commentaire
     pid_t pid;
     int id, portno, addServeur;
     char msg[255];//variable qui contiendrat les messages
